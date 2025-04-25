@@ -33,6 +33,10 @@ func (c *CommentsRepo) GetCommentsByPostID(ID int) ([]domain.Comment, error) {
 	var comments []domain.Comment
 	for rows.Next() {
 		var comment domain.Comment
+		err := rows.Scan(comment)
+		if err != nil {
+			return nil, err
+		}
 		comments = append(comments, comment)
 	}
 	return comments, nil
