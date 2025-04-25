@@ -26,8 +26,8 @@ type Comment struct {
 }
 
 type Session struct {
+	ID        int
 	Name      string
-	IP        string
 	AvatarURL string
 	CreatedAt time.Time
 	ExpiresAt time.Time
