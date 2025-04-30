@@ -1,0 +1,97 @@
+List of Endpoints to Implement:
+
+    Catalog Page (GET /):
+
+        Purpose: Display all active posts in a tiled format (posts without comments are deleted after 10 minutes).
+
+        Details:
+
+            This will load posts from the database that are still active.
+
+            If posts are older than 10 minutes without comments, they should not be displayed.
+
+            Provide buttons to navigate to the archive page and create new posts.
+
+        Handler: CatalogHandler (already mentioned in handlers/post_handlers.go).
+
+    Archive Page (GET /archive):
+
+        Purpose: Show all posts, including those deleted from the main page (catalog.html).
+
+        Details:
+
+            Display both active and archived posts (deleted posts).
+
+            The archived posts can still be viewed but cannot have new comments added.
+
+        Handler: ArchiveHandler (implement this to fetch posts from both the active and archived categories).
+
+    Create Post Page (GET /create and POST /create):
+
+        Purpose: Provide a form to create new posts and handle the submission of the form to create a post.
+
+        Details:
+
+            On GET request, render a form for the user to input post title, text, and optionally upload an image.
+
+            On POST request, create the post in the database and redirect to the catalog page.
+
+            Associate the post with a session, i.e., a unique avatar and user name.
+
+        Handler: CreatePostHandler (already partially implemented in post_handlers.go).
+
+    Post Page (GET /post/{id:[0-9]+}):
+
+        Purpose: View a specific post, its comments, and allow users to add comments.
+
+        Details:
+
+            Display the post, its title, text, post ID, image (if available), and comments.
+
+            Allow users to reply to posts or other comments. Each comment will show the user's avatar and name.
+
+            If a user is replying to a comment, it should show which comment they are replying to.
+
+            For a user's first visit, assign them an avatar and name from the Rick and Morty API.
+
+            If the post is deleted, redirect the user to an archived version of the post (use archive-post.html template).
+
+        Handler: PostHandler (you will need to implement fetching the post, its comments, and displaying the related user data and avatars).
+
+    Archive Post Page (GET /archive-post/{id:[0-9]+}):
+
+        Purpose: View an archived post (deleted from the main page) and its comments.
+
+        Details:
+
+            Similar to the post page, but you can't add new comments to archived posts.
+
+            Display the post with its comments, and ensure avatars and names remain as they were when the post was active.
+
+        Handler: ArchivePostHandler (you will need to ensure that when a post is deleted, it can still be accessed in the archive).
+
+    Add Comment to Post (POST /post/{id:[0-9]+}/comment):
+
+        Purpose: Allow users to add a comment to a post.
+
+        Details:
+
+            This endpoint will take in comment text and submit it to the post, associating it with the user’s session (i.e., avatar and name).
+
+            Store the comment in the database and associate it with the post.
+
+            Each comment will include a reference to the post ID, and if it’s a reply to a comment, include the comment ID it’s replying to.
+
+        Handler: AddCommentHandler (you’ll need to implement the logic to handle comment creation and saving).
+
+    Reply to Comment (POST /comment/{id:[0-9]+}/reply):
+
+        Purpose: Allow users to reply to a comment.
+
+        Details:
+
+            Similar to adding a comment, but the response will reference the ID of the comment being replied to.
+
+            This should add a reply with a reference to the original comment in the database.
+
+        Handler: ReplyToCommentHandler (you will implement this similarly to the comment handler, but with a reference to the comment being replied to).

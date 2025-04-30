@@ -9,6 +9,10 @@ type postRepo struct {
 	db *sql.DB
 }
 
+func NewpostRepo(db *sql.DB) *postRepo {
+	return &postRepo{}
+}
+
 func (p *postRepo) CreatePost(post domain.Post) (int, error) {
 	query := `INSERT INTO posts(title, content, avatarurl, imgsurl, author, created_at, lastcommeted, deleted ) 
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`

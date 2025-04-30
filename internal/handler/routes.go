@@ -7,6 +7,7 @@ import (
 
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB) {
 	var chandler CommentHandler
+
 	mux.Handle("/", &chandler) // loads all posts
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 

@@ -9,7 +9,11 @@ type CommentsRepo struct {
 	db *sql.DB
 }
 
-func (c *CommentsRepo) NewCommentsRepo(com domain.Comment) error {
+func NewCommentsRepo(db *sql.DB) *CommentsRepo {
+	return &CommentsRepo{}
+}
+
+func (c *CommentsRepo) CreateComment(com domain.Comment) error {
 	query := `
 	INSERT INTO comments(post_id, parent_id, avatarurl, imgsurl, content, created_at, author)
 	VALUES ($1, $2, $3, $4, $5, $6, $7)
