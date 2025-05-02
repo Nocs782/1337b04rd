@@ -5,15 +5,15 @@ import (
 	"database/sql"
 )
 
-type postRepo struct {
+type PostRepo struct {
 	db *sql.DB
 }
 
-func NewpostRepo(db *sql.DB) *postRepo {
-	return &postRepo{}
+func NewPostRepo(db *sql.DB) *PostRepo {
+	return &PostRepo{}
 }
 
-func (p *postRepo) CreatePost(post domain.Post) (int, error) {
+func (p *PostRepo) CreatePost(post domain.Post) (int, error) {
 	query := `INSERT INTO posts(title, content, avatarurl, imgsurl, author, created_at, lastcommeted, deleted ) 
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`
 
@@ -25,7 +25,7 @@ func (p *postRepo) CreatePost(post domain.Post) (int, error) {
 
 }
 
-func (p *postRepo) GetPost(id int) (domain.Post, error) {
+func (p *PostRepo) GetPost(id int) (domain.Post, error) {
 	var post domain.Post
 	query := `SELECT * FROM posts WHERE id = $1;`
 	row := p.db.QueryRow(query, id)
@@ -35,7 +35,7 @@ func (p *postRepo) GetPost(id int) (domain.Post, error) {
 	}
 	return post, nil
 }
-func (p *postRepo) GetActivePosts() ([]domain.Post, error) {
+func (p *PostRepo) GetActivePosts() ([]domain.Post, error) {
 	var posts []domain.Post
 	query := `SELECT * FROM posts WHERE deleted IS FALSE`
 	rows, err := p.db.Query(query)
@@ -56,7 +56,7 @@ func (p *postRepo) GetActivePosts() ([]domain.Post, error) {
 	return posts, nil
 
 }
-func (p *postRepo) GetAllPosts() ([]domain.Post, error) {
+func (p *PostRepo) GetAllPosts() ([]domain.Post, error) {
 	var posts []domain.Post
 	query := `SELECT * FROM posts;`
 	rows, err := p.db.Query(query)
@@ -75,7 +75,7 @@ func (p *postRepo) GetAllPosts() ([]domain.Post, error) {
 	return posts, nil
 }
 
-func (p *postRepo) ExpirePost(id int) error {
+func (p *PostRepo) ExpirePost(id int) error {
 	query := `UPDATE posts WHERE id = $1 SET deleted IS TRUE`
 	_, err := p.db.Exec(query, id)
 	if err != nil {
