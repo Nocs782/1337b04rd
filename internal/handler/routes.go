@@ -1,14 +1,22 @@
 package handler
 
 import (
+	"1337b04rd/internal/adapter/postgres"
+	"1337b04rd/internal/service"
 	"database/sql"
 	"net/http"
 )
 
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB) {
-	var chandler CommentHandler
+	postRepo := postgres.NewPostRepo(db)
+	postService := service.NewPostService(postRepo)
+	postHandler := NewPostHandler(postService)
 
-	mux.Handle("/", &chandler) // loads all posts
+	commentRepo := postgres.NewCommentsRepo(db)
+	commentService := service.NewCommentService(commentRepo)
+	commentHandler := NewCommentHandler(commentService)
+
+	mux.Handle("/", func() {}) // loads all posts
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	mux.Handle("/archive", func() {}) // loads all archive
@@ -23,9 +31,9 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB) {
 			// get form to make a post
 		}
 	})
-	mux.Handle("/post", func() {})
+	mux.Handle("/post", postHandler)
 	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {})
 
-	mux.Handle("/comment", func() {})
+	mux.Handle("/comment", commentHandler)
 	mux.HandleFunc("/comment/", func(w http.ResponseWriter, r *http.Request) {})
 }
