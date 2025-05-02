@@ -1,26 +1,75 @@
 package handler
 
 import (
+	"1337b04rd/internal/domain"
+	"1337b04rd/internal/service"
+	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type CommentHandler struct {
-	service string //service of comment
+	service *service.CommentService
 }
 
-func newCommentHandler(service string) *CommentHandler {
-	return &CommentHandler{}
+func NewCommentHandler(service *service.CommentService) *CommentHandler {
+	return &CommentHandler{service: service}
 }
 
 func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	pathSegments := strings.Split(r.URL.Path, "/")
 
-	if r.Method == http.MethodPost {
+	switch r.Method {
+	case http.MethodPost:
 		c.postComment(w, r)
-	} else {
-		//method not allowed
+	case http.MethodGet:
+		if len(pathSegments) == 2 { // /posts/{postId}/comments
+			c.getCommentsByPostIDHandler(w, r)
+		}
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
 func (c *CommentHandler) postComment(w http.ResponseWriter, r *http.Request) {
-	//to post comment service
+	var comment domain.Comment
+	// Decode the incoming request JSON payload into a Comment object
+	err := json.NewDecoder(r.Body).Decode(&comment)
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	// Call the service to create the comment
+	err = c.service.CreateComment(comment)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with a success message
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Comment created successfully"))
+}
+
+func (c *CommentHandler) getCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract the post ID from the URL
+	pathSegments := strings.Split(r.URL.Path, "/")
+	postID, err := strconv.Atoi(pathSegments[1])
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get the comments for the given post from the service
+	comments, err := c.service.GetCommentsByPostID(postID)
+	if err != nil {
+		http.Error(w, "Failed to fetch comments", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the comments in JSON format
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(comments)
 }
