@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-func generateSessionID() string {
+func GenerateSessionID() string {
 	bytes := make([]byte, 32) // 256-bit session ID
 	if _, err := rand.Read(bytes); err != nil {
 		log.Fatal(err)
 	}
 	return base64.URLEncoding.EncodeToString(bytes)
 }
-func setSessionCookie(w http.ResponseWriter, sessionID string) {
+func SetSessionCookie(w http.ResponseWriter, sessionID string) {
 	cookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
@@ -26,7 +26,7 @@ func setSessionCookie(w http.ResponseWriter, sessionID string) {
 	}
 	http.SetCookie(w, cookie)
 }
-func getSessionID(r *http.Request) string {
+func GetSessionID(r *http.Request) string {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		return ""
