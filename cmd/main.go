@@ -1,23 +1,23 @@
 package main
 
 import (
+	"1337b04rd/internal/adapter/postgres"
 	"fmt"
+	"log"
 	"os"
 )
 
 func main() {
-	port := os.Getenv("PORT")
 	dbURL := os.Getenv("DATABASE_URL")
-	s3Endpoint := os.Getenv("S3_ENDPOINT")
-
-	if port == "" || dbURL == "" || s3Endpoint == "" {
-		fmt.Println("One or more environment variables are missing.")
-		os.Exit(1)
+	if dbURL == "" {
+		log.Fatal("DATABASE_URL is not set.")
 	}
 
-	fmt.Println("PORT:", port)
-	fmt.Println("DATABASE_URL:", dbURL)
-	fmt.Println("S3_ENDPOINT:", s3Endpoint)
+	db, err := postgres.Connect(dbURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
 
-	fmt.Println("1337b04rd is running!")
+	fmt.Println("Successfully connected to the database.")
 }
