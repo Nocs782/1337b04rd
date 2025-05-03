@@ -1,4 +1,3 @@
-# Use official small Go base image
 FROM golang:1.22-alpine
 
 WORKDIR /app
