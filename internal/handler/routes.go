@@ -16,11 +16,11 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB) {
 	commentService := service.NewCommentService(commentRepo)
 	commentHandler := NewCommentHandler(commentService)
 
-	mux.Handle("/", func() {}) // loads all posts
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
+	// mux.Handle("/", func() {}) // loads all posts
+	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 
-	mux.Handle("/archive", func() {}) // loads all archive
-	mux.HandleFunc("/archive/", func(w http.ResponseWriter, r *http.Request) {})
+	// mux.Handle("/archive", func() {}) // loads all archive
+	// mux.HandleFunc("/archive/", func(w http.ResponseWriter, r *http.Request) {})
 
 	mux.Handle("/post", postHandler)
 	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {})

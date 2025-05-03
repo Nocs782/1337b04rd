@@ -42,7 +42,7 @@ func (s *CommentService) ReplyComment(comment domain.Comment, replyID int) error
 	// Set creation time for the comment
 	comment.CreatedAt = time.Now()
 
-	comment.ParentCommentId = replyID
+	comment.ParentCommentID = &replyID
 
 	return s.repo.CreateComment(comment)
 

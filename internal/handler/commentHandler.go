@@ -79,14 +79,14 @@ func (c *CommentHandler) getCommentsByPostIDHandler(w http.ResponseWriter, r *ht
 }
 
 func (c *CommentHandler) replyComment(w http.ResponseWriter, r *http.Request) {
+	var comment domain.Comment
 	pathSegments := strings.Split(r.URL.Path, "/")
 	parentID, err := strconv.Atoi(pathSegments[1])
-	err := json.NewDecoder(r.Body).Decode(&comment)
+	err = json.NewDecoder(r.Body).Decode(&comment)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
-
 
 	// Call the service to create the comment
 	err = c.service.ReplyComment(comment, parentID)
