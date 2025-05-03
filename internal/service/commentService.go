@@ -33,3 +33,17 @@ func (s *CommentService) GetCommentsByPostID(postID int) ([]domain.Comment, erro
 	// Retrieve comments from the repository
 	return s.repo.GetCommentsByPostID(postID)
 }
+
+func (s *CommentService) ReplyComment(comment domain.Comment, replyID int) error {
+	// Validate comment fields
+	if comment.Content == "" || comment.Author == "" {
+		return errors.New("content and author cannot be empty")
+	}
+	// Set creation time for the comment
+	comment.CreatedAt = time.Now()
+
+	comment.ParentCommentId = replyID
+
+	return s.repo.CreateComment(comment)
+
+}

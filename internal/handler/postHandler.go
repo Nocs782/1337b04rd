@@ -5,6 +5,7 @@ import (
 	"1337b04rd/internal/service"
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -22,11 +23,15 @@ func (p *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		switch len(pathSegments) {
-		case 2: // get post by ID
-			p.GetPostByIdHandler(w, r)
-		case 1: // get active posts
-			p.GetActivePostsHandler(w, r)
+		if slices.Contains(pathSegments, "create") {
+			p.GetAllPostsHandler(w, r)
+		} else {
+			switch len(pathSegments) {
+			case 2: // get post by ID
+				p.GetPostByIdHandler(w, r)
+			case 1: // get active posts
+				p.GetActivePostsHandler(w, r)
+			}
 		}
 	case http.MethodPost:
 		p.CreatePostHandler(w, r)

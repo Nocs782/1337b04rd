@@ -22,9 +22,13 @@ func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPost:
+		if len(pathSegments) == 1 {
+			c.replyComment(w, r)
+		}
 		c.postComment(w, r)
+
 	case http.MethodGet:
-		if len(pathSegments) == 2 { // /posts/{postId}/comments
+		if len(pathSegments) == 1 { // comments/{postId}/
 			c.getCommentsByPostIDHandler(w, r)
 		}
 	default:
@@ -72,4 +76,24 @@ func (c *CommentHandler) getCommentsByPostIDHandler(w http.ResponseWriter, r *ht
 	// Respond with the comments in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(comments)
+}
+
+func (c *CommentHandler) replyComment(w http.ResponseWriter, r *http.Request) {
+	pathSegments := strings.Split(r.URL.Path, "/")
+	parentID, err := strconv.Atoi(pathSegments[1])
+	err := json.NewDecoder(r.Body).Decode(&comment)
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+
+	// Call the service to create the comment
+	err = c.service.ReplyComment(comment, parentID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Comment created successfully"))
 }

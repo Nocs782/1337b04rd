@@ -26,7 +26,7 @@ type Comment struct {
 }
 
 type Session struct {
-	ID        int
+	ID        string
 	Name      string
 	AvatarURL string
 	CreatedAt time.Time
