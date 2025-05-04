@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Archived Post {{ post.id }}</title>
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .post-container, .comment {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        img.post-image {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        .comment-header {
+            display: flex;
+            align-items: center;
+        }
+        .comment-body {
+            margin-left: 60px;
+        }
+    </style>
+    </head>
+    <body>
+
+        <header>
+            <h1>Archived Thread: {{ post.title }}</h1>
+        </header>
+
+        <div class="post-container">
+            <h2>{{ post.title }}</h2>
+            <p>{{ post.text }}</p>
+            <p><strong>Post ID:</strong> {{ post.id }}</p>
+            {% if post.image_filename %}
+            <img
+                src="http://localhost:9000/post-images/{{ post.image_filename }}"
+                class="post-image" alt="Post Image">
+            {% endif %}
+        </div>
+
+        <h3>Comments</h3>
+
+        {% for comment in comments %}
+        <div class="comment">
+            <div class="comment-header">
+                <img src="{{ comment.avatar_url }}" class="avatar" alt="Avatar">
+                <strong>{{ comment.username }}</strong>
+                (ID: {{ comment.id }})
+                {% if comment.reply_to_id %}
+                replying to ID: {{ comment.reply_to_id }}
+                {% endif %}
+            </div>
+            <div class="comment-body">
+                <p>{{ comment.text }}</p>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div style="text-align:center; margin-top:20px;">
+            <button onclick="window.location.href='/catalog'">Back to
+                Catalog</button>
+        </div>
+
+    </body>
+</html>
