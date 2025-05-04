@@ -46,6 +46,23 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 		w.Write([]byte("Image uploaded successfully as " + header.Filename))
 	})
 
+	mux.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
+		filename := r.URL.Query().Get("filename")
+		if filename == "" {
+			http.Error(w, "Filename required", http.StatusBadRequest)
+			return
+		}
+
+		data, err := imageStorage.DownloadImage(filename)
+		if err != nil {
+			http.Error(w, "Failed to download image: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Write(data)
+	})
+
 	mux.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) {
 		filename := r.URL.Query().Get("filename")
 		if filename == "" {

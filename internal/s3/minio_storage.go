@@ -52,6 +52,22 @@ func (m *MinioStorage) UploadImage(file multipart.File, filename string) error {
 	return nil
 }
 
+func (m *MinioStorage) DownloadImage(filename string) ([]byte, error) {
+	url := fmt.Sprintf("%s/%s/%s", m.endpoint, m.bucket, filename)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("GET request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GET failed: %s", resp.Status)
+	}
+
+	return io.ReadAll(resp.Body)
+}
+
 func (m *MinioStorage) DeleteImage(filename string) error {
 	url := fmt.Sprintf("%s/%s/%s", m.endpoint, m.bucket, filename)
 
