@@ -24,8 +24,11 @@ func (p *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if slices.Contains(pathSegments, "create") {
+			p.GetFormPostHandler(w, r)
+		} else if slices.Contains(pathSegments, "archive") {
 			p.GetAllPostsHandler(w, r)
-		} else {
+		}
+		{
 			switch len(pathSegments) {
 			case 2: // get post by ID
 				p.GetPostByIdHandler(w, r)
@@ -94,5 +97,18 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (p *PostHandler) GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
+	posts, err := p.service.GetAllPosts()
+	if err != nil {
+		http.Error(w, "Failed to fetch active posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the list of posts in JSON format
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(posts)
+}
+
+func (p *PostHandler) GetFormPostHandler(w http.ResponseWriter, r *http.Request) {
+	return //vyzov template for form
 
 }
