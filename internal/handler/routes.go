@@ -6,6 +6,8 @@ import (
 	"1337b04rd/internal/service"
 	"database/sql"
 	"net/http"
+	"slices"
+	"strings"
 )
 
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageStorage) {
@@ -26,10 +28,46 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 	// mux.HandleFunc("/archive/", func(w http.ResponseWriter, r *http.Request) {})
 
 	mux.Handle("/post", postHandler)
-	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {})
+	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {
+		pathSegments := strings.Split(r.URL.Path, "/")
+		switch r.Method {
+		case http.MethodGet:
+			if slices.Contains(pathSegments, "create") {
+				postHandler.GetFormPostHandler(w, r)
+			} else if slices.Contains(pathSegments, "archive") {
+				postHandler.GetAllPostsHandler(w, r)
+			} else {
+				switch len(pathSegments) {
+				case 3: // get post by ID
+					postHandler.GetPostByIdHandler(w, r)
+				case 2: // get active posts
+					postHandler.GetActivePostsHandler(w, r)
+				}
+			}
+		case http.MethodPost:
+			postHandler.CreatePostHandler(w, r)
+		}
+	})
 
 	mux.Handle("/comment", commentHandler)
-	mux.HandleFunc("/comment/", func(w http.ResponseWriter, r *http.Request) {})
+	mux.HandleFunc("/comment/", func(w http.ResponseWriter, r *http.Request) {
+		pathSegments := strings.Split(r.URL.Path, "/")
+
+		switch r.Method {
+		case http.MethodPost:
+			if len(pathSegments) == 1 {
+				commentHandler.replyComment(w, r)
+			}
+			commentHandler.postComment(w, r)
+
+		case http.MethodGet:
+			if len(pathSegments) == 1 { // comments/{postId}/
+				commentHandler.getCommentsByPostIDHandler(w, r)
+			}
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	mux.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

@@ -27,12 +27,11 @@ func (p *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			p.GetFormPostHandler(w, r)
 		} else if slices.Contains(pathSegments, "archive") {
 			p.GetAllPostsHandler(w, r)
-		}
-		{
+		} else {
 			switch len(pathSegments) {
-			case 2: // get post by ID
+			case 3: // get post by ID
 				p.GetPostByIdHandler(w, r)
-			case 1: // get active posts
+			case 2: // get active posts
 				p.GetActivePostsHandler(w, r)
 			}
 		}
@@ -78,7 +77,7 @@ func (p *PostHandler) GetActivePostsHandler(w http.ResponseWriter, r *http.Reque
 func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the ID from the URL path
 	pathSegments := strings.Split(r.URL.Path, "/")
-	id, err := strconv.Atoi(pathSegments[1])
+	id, err := strconv.Atoi(pathSegments[2])
 	if err != nil {
 		http.Error(w, "Invalid post ID", http.StatusBadRequest)
 		return
