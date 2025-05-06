@@ -10,7 +10,9 @@ type SessionRepo struct {
 }
 
 func NewSessionRepo(db *sql.DB) *SessionRepo {
-	return &SessionRepo{}
+	return &SessionRepo{
+		db: db,
+	}
 }
 
 func (s *SessionRepo) CreateSession(session domain.Session) error {

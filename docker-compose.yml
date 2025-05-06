@@ -51,7 +51,7 @@ services:
     entrypoint: >
       /bin/sh -c "
           echo 'Waiting for MinIO to start...' &&
-          sleep 20 &&
+          sleep 5 &&
           mc alias set myminio http://minio:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY} &&
           mc mb --ignore-existing myminio/${S3_BUCKET} &&
           mc anonymous set public myminio/${S3_BUCKET} &&

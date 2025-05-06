@@ -14,11 +14,28 @@ type MinioStorage struct {
 	bucket   string // Example: post-images
 }
 
-func NewMinioStorage(endpoint, bucket string) *MinioStorage {
-	return &MinioStorage{
+func NewMinioStorage(endpoint, bucket string) (*MinioStorage, error) {
+	storage := &MinioStorage{
 		endpoint: strings.TrimSuffix(endpoint, "/"),
 		bucket:   bucket,
 	}
+
+	if !storage.bucketExists() {
+		return nil, fmt.Errorf("bucket '%s' does not exist or MinIO is unreachable", bucket)
+	}
+
+	return storage, nil
+}
+
+func (s *MinioStorage) bucketExists() bool {
+	url := fmt.Sprintf("%s/%s", s.endpoint, s.bucket)
+	resp, err := http.Head(url)
+	if err != nil {
+		fmt.Println("Error checking bucket:", err)
+		return false
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
 }
 
 func (m *MinioStorage) UploadImage(file multipart.File, filename string) error {

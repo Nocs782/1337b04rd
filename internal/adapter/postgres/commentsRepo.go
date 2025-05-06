@@ -10,7 +10,9 @@ type CommentsRepo struct {
 }
 
 func NewCommentsRepo(db *sql.DB) *CommentsRepo {
-	return &CommentsRepo{}
+	return &CommentsRepo{
+		db: db,
+	}
 }
 
 func (c *CommentsRepo) CreateComment(com domain.Comment) error {

@@ -3,6 +3,7 @@ package postgres
 import (
 	"1337b04rd/internal/domain"
 	"database/sql"
+	"log"
 )
 
 type PostRepo struct {
@@ -10,7 +11,12 @@ type PostRepo struct {
 }
 
 func NewPostRepo(db *sql.DB) *PostRepo {
-	return &PostRepo{}
+	if db == nil {
+		log.Fatal("NewPostRepo: received a nil db")
+	}
+	return &PostRepo{
+		db: db,
+	}
 }
 
 func (p *PostRepo) CreatePost(post domain.Post) (int, error) {

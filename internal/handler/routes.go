@@ -18,13 +18,19 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 	commentService := service.NewCommentService(commentRepo)
 	commentHandler := NewCommentHandler(commentService)
 
-	// mux.Handle("/", func() {}) // loads all posts
+	mux.HandleFunc("/", ShowCatalog(postService))
+
 	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	// mux.Handle("/archive", func() {}) // loads all archive
 	// mux.HandleFunc("/archive/", func(w http.ResponseWriter, r *http.Request) {})
 
-	// test the minio s3 bucket
+	mux.Handle("/post", postHandler)
+	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {})
+
+	mux.Handle("/comment", commentHandler)
+	mux.HandleFunc("/comment/", func(w http.ResponseWriter, r *http.Request) {})
+
 	mux.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -78,10 +84,4 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 
 		w.Write([]byte("Image deleted successfully"))
 	})
-
-	mux.Handle("/post", postHandler)
-	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {})
-
-	mux.Handle("/comment", commentHandler)
-	mux.HandleFunc("/comment/", func(w http.ResponseWriter, r *http.Request) {})
 }

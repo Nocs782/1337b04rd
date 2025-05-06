@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"1337b04rd/internal/adapter/postgres"
 	"1337b04rd/internal/handler"
@@ -13,8 +14,9 @@ import (
 
 func main() {
 
-	dbURL := os.Getenv("DATABASE_URL")
+	time.Sleep(10 * time.Second)
 
+	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		log.Fatal("DATABASE_URL is not set.")
 	}
@@ -29,12 +31,12 @@ func main() {
 
 	s3Endpoint := os.Getenv("S3_ENDPOINT")
 	s3Bucket := os.Getenv("S3_BUCKET")
+
 	if s3Bucket == "" {
 		log.Fatal("S3_BUCKET is not set.")
 	}
 
-	minioStorage := s3.NewMinioStorage(s3Endpoint, s3Bucket)
-
+	minioStorage, err := s3.NewMinioStorage(s3Endpoint, s3Bucket) // FIXED: catch err here!
 	if err != nil {
 		log.Fatalf("Failed to initialize S3 client: %v", err)
 	}
@@ -49,7 +51,7 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Printf("Server is running on port %s\n", port)
+	fmt.Printf("🚀 Server is running on port %s\n", port)
 	err = http.ListenAndServe(":"+port, mux)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
