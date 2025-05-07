@@ -11,11 +11,12 @@ import (
 )
 
 type PostHandler struct {
-	service *service.PostService
+	service        *service.PostService
+	CommentHandler *CommentHandler
 }
 
-func NewPostHandler(service *service.PostService) *PostHandler {
-	return &PostHandler{service: service}
+func NewPostHandler(service *service.PostService, CommentHandler *CommentHandler) *PostHandler {
+	return &PostHandler{service: service, CommentHandler: CommentHandler}
 }
 
 func (p *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -89,10 +90,17 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
 	}
+	comments, err := p.CommentHandler.service.GetCommentsByPostID(id)
+	if err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
 
 	// Respond with the post in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(post)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(comments)
 }
 
 func (p *PostHandler) GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {

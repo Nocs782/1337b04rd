@@ -22,21 +22,21 @@ func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPost:
-		if len(pathSegments) == 1 {
-			c.replyComment(w, r)
+		if len(pathSegments) == 2 {
+			c.ReplyComment(w, r)
 		}
-		c.postComment(w, r)
+		c.PostComment(w, r)
 
 	case http.MethodGet:
-		if len(pathSegments) == 1 { // comments/{postId}/
-			c.getCommentsByPostIDHandler(w, r)
+		if len(pathSegments) == 2 { // comments/{postId}/
+			c.GetCommentsByPostIDHandler(w, r)
 		}
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func (c *CommentHandler) postComment(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request) {
 	var comment domain.Comment
 	// Decode the incoming request JSON payload into a Comment object
 	err := json.NewDecoder(r.Body).Decode(&comment)
@@ -57,7 +57,7 @@ func (c *CommentHandler) postComment(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Comment created successfully"))
 }
 
-func (c *CommentHandler) getCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) GetCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the post ID from the URL
 	pathSegments := strings.Split(r.URL.Path, "/")
 	postID, err := strconv.Atoi(pathSegments[1])
@@ -78,7 +78,7 @@ func (c *CommentHandler) getCommentsByPostIDHandler(w http.ResponseWriter, r *ht
 	json.NewEncoder(w).Encode(comments)
 }
 
-func (c *CommentHandler) replyComment(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) ReplyComment(w http.ResponseWriter, r *http.Request) {
 	var comment domain.Comment
 	pathSegments := strings.Split(r.URL.Path, "/")
 	parentID, err := strconv.Atoi(pathSegments[1])

@@ -12,13 +12,13 @@ import (
 
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageStorage) {
 
-	postRepo := postgres.NewPostRepo(db)
-	postService := service.NewPostService(postRepo)
-	postHandler := NewPostHandler(postService)
-
 	commentRepo := postgres.NewCommentsRepo(db)
 	commentService := service.NewCommentService(commentRepo)
 	commentHandler := NewCommentHandler(commentService)
+
+	postRepo := postgres.NewPostRepo(db)
+	postService := service.NewPostService(postRepo)
+	postHandler := NewPostHandler(postService, commentHandler)
 
 	mux.HandleFunc("/", ShowCatalog(postService))
 
@@ -40,6 +40,7 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 				switch len(pathSegments) {
 				case 3: // get post by ID
 					postHandler.GetPostByIdHandler(w, r)
+					commentHandler.GetCommentsByPostIDHandler(w, r)
 				case 2: // get active posts
 					postHandler.GetActivePostsHandler(w, r)
 				}
@@ -55,14 +56,14 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 
 		switch r.Method {
 		case http.MethodPost:
-			if len(pathSegments) == 1 {
-				commentHandler.replyComment(w, r)
+			if len(pathSegments) == 2 {
+				commentHandler.ReplyComment(w, r)
 			}
-			commentHandler.postComment(w, r)
+			commentHandler.PostComment(w, r)
 
 		case http.MethodGet:
-			if len(pathSegments) == 1 { // comments/{postId}/
-				commentHandler.getCommentsByPostIDHandler(w, r)
+			if len(pathSegments) == 2 { // comments/{postId}/
+				commentHandler.GetCommentsByPostIDHandler(w, r)
 			}
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
