@@ -63,23 +63,23 @@
 </div>
 
 <div class="grid">
-    {% for post in posts %}
-    <div class="tile"
-         onclick="window.location.href='{{ '/archive-post/' + post.id if post.is_deleted else '/post/' + post.id }}'">
-        {% if post.image_filename %}
-            <img src="http://localhost:9000/post-images/{{ post.image_filename }}" alt="Post Image">
-        {% else %}
-            <img src="/static/default.png" alt="No Image">
-        {% endif %}
-        <h3>{{ post.title }}</h3>
-        <p>ID: {{ post.id }}</p>
-        <p>Comments: {{ post.comment_count }}</p>
-        {% if post.is_deleted %}
+    {{range .Posts}}
+    <div class="tile" onclick="window.location.href='/post/{{.ID}}'">
+        {{if .IMGURL}}
+            <img src="http://localhost:9000/post-images/{{.IMGURL}}" alt="Post Image">
+        {{else}}
+            <img src="https://via.placeholder.com/250x150?text=No+Image" alt="No Image">
+        {{end}}
+        <h3>{{.Title}}</h3>
+        <p>ID: {{.ID}}</p>
+        <p>Comments: {{.CommentCount}}</p>
+        {{if .Deleted}}
             <p style="color: red;">Deleted</p>
-        {% endif %}
+        {{end}}
     </div>
-    {% endfor %}
+    {{end}}
 </div>
+
 
 </body>
 </html>

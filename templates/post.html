@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Post {{ post.id }}</title>
+    <title>Post {{ .Post.ID }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -71,40 +71,40 @@
 <body>
 
 <header>
-    <h1>Thread: {{ post.title }}</h1>
+    <h1>Thread: {{ .Post.Title }}</h1>
 </header>
 
 <div class="post-container">
-    <h2>{{ post.title }}</h2>
-    <p>{{ post.text }}</p>
-    <p><strong>Post ID:</strong> {{ post.id }}</p>
-    {% if post.image_filename %}
-        <img src="http://localhost:9000/post-images/{{ post.image_filename }}" class="post-image" alt="Post Image">
-    {% endif %}
+    <h2>{{ .Post.Title }}</h2>
+    <p>{{ .Post.Text }}</p>
+    <p><strong>Post ID:</strong> {{ .Post.ID }}</p>
+    {{if .Post.ImageFilename}}
+        <img src="http://localhost:9000/post-images/{{ .Post.ImageFilename }}" class="post-image" alt="Post Image">
+    {{end}}
 </div>
 
 <h3>Comments</h3>
 
-{% for comment in comments %}
+{{range .Comments}}
     <div class="comment">
         <div class="comment-header">
-            <img src="{{ comment.avatar_url }}" class="avatar" alt="Avatar">
-            <strong>{{ comment.username }}</strong> 
-            (ID: {{ comment.id }}) 
-            {% if comment.reply_to_id %}
-                replying to ID: {{ comment.reply_to_id }}
-            {% endif %}
+            <img src="{{ .AvatarURL }}" class="avatar" alt="Avatar">
+            <strong>{{ .Username }}</strong> 
+            (ID: {{ .ID }}) 
+            {{if .ReplyToID}}
+                replying to ID: {{ .ReplyToID }}
+            {{end}}
         </div>
         <div class="comment-body">
-            <p>{{ comment.text }}</p>
-            <span class="reply-link" onclick="setReplyTo('{{ comment.id }}')">Reply</span>
+            <p>{{ .Text }}</p>
+            <span class="reply-link" onclick="setReplyTo('{{ .ID }}')">Reply</span>
         </div>
     </div>
-{% endfor %}
+{{end}}
 
 <div class="post-container" id="comment-form">
     <h3>Add a Comment</h3>
-    <form method="POST" action="/post/{{ post.id }}/comment">
+    <form method="POST" action="/post/{{ .Post.ID }}/comment">
         <textarea name="text" required></textarea>
         <input type="hidden" name="reply_to" id="reply_to" value="">
         <br>
@@ -113,7 +113,7 @@
 </div>
 
 <div style="text-align:center; margin-top:20px;">
-    <button onclick="window.location.href='/catalog'">Back to Catalog</button>
+    <button onclick="window.location.href='/'">Back to Catalog</button>
 </div>
 
 </body>

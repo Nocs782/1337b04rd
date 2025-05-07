@@ -84,24 +84,76 @@ func (p *PostHandler) GetActivePostsHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request) {
-	// Get the ID from the URL path
+
 	pathSegments := strings.Split(r.URL.Path, "/")
+	if len(pathSegments) < 3 {
+		http.Error(w, "Invalid post URL", http.StatusBadRequest)
+		return
+	}
+
 	id, err := strconv.Atoi(pathSegments[2])
 	if err != nil {
 		http.Error(w, "Invalid post ID", http.StatusBadRequest)
 		return
 	}
 
-	// Call the service to get the post by ID
 	post, err := p.service.GetPostByID(id)
 	if err != nil {
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
 	}
 
-	// Respond with the post in JSON format
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
+	imageFilename := ""
+	if len(post.IMGsURLs) > 0 {
+		imageFilename = post.IMGsURLs[0]
+	}
+
+	data := struct {
+		Post struct {
+			ID            int
+			Title         string
+			Text          string
+			ImageFilename string
+		}
+		Comments []struct { // empty for now
+			ID        int
+			AvatarURL string
+			Username  string
+			Text      string
+			ReplyToID *int
+		}
+	}{
+		Post: struct {
+			ID            int
+			Title         string
+			Text          string
+			ImageFilename string
+		}{
+			ID:            post.ID,
+			Title:         post.Title,
+			Text:          post.Content,
+			ImageFilename: imageFilename,
+		},
+		Comments: []struct {
+			ID        int
+			AvatarURL string
+			Username  string
+			Text      string
+			ReplyToID *int
+		}{},
+	}
+
+	tmpl, err := template.ParseFiles("templates/post.html")
+	if err != nil {
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render post page: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (p *PostHandler) GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {

@@ -10,6 +10,7 @@ import (
 type CatalogPost struct {
 	ID            int
 	Title         string
+	Content       string // ✅ Added Content field
 	IMGURL        string
 	CommentCount  int
 	TimeRemaining int
@@ -20,14 +21,15 @@ type CatalogPageData struct {
 }
 
 func ShowCatalog(postService *service.PostService) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Get posts from service
 		posts, err := postService.GetActivePosts()
 		if err != nil {
 			http.Error(w, "Failed to load posts", http.StatusInternalServerError)
 			return
 		}
 
+		// Prepare posts for the catalog template
 		var catalogPosts []CatalogPost
 		for _, post := range posts {
 			imgURL := ""
@@ -35,6 +37,7 @@ func ShowCatalog(postService *service.PostService) http.HandlerFunc {
 				imgURL = post.IMGsURLs[0]
 			}
 
+			// Calculate expiration time
 			expireTime := post.LastCommented.Add(15 * time.Minute)
 			timeRemaining := int(time.Until(expireTime).Minutes())
 			if timeRemaining < 0 {
@@ -44,8 +47,9 @@ func ShowCatalog(postService *service.PostService) http.HandlerFunc {
 			catalogPosts = append(catalogPosts, CatalogPost{
 				ID:            post.ID,
 				Title:         post.Title,
+				Content:       post.Content,
 				IMGURL:        imgURL,
-				CommentCount:  0,
+				CommentCount:  0, // Placeholder for now
 				TimeRemaining: timeRemaining,
 			})
 		}
@@ -54,13 +58,16 @@ func ShowCatalog(postService *service.PostService) http.HandlerFunc {
 			Posts: catalogPosts,
 		}
 
+		// Parse and execute template
 		tmpl, err := template.ParseFiles("templates/catalog.html")
 		if err != nil {
 			http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		tmpl.Execute(w, data)
+		err = tmpl.Execute(w, data)
+		if err != nil {
+			http.Error(w, "Failed to render catalog: "+err.Error(), http.StatusInternalServerError)
+		}
 	}
-
 }
