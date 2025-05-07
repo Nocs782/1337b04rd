@@ -4,61 +4,70 @@ import (
 	"1337b04rd/internal/domain"
 	"1337b04rd/internal/service"
 	"encoding/json"
+	"fmt"
+	"html/template"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type PostHandler struct {
-	service *service.PostService
+	service      *service.PostService
+	imageStorage domain.ImageStorage
 }
 
-func NewPostHandler(service *service.PostService) *PostHandler {
-	return &PostHandler{service: service}
-}
-
-func (p *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	pathSegments := strings.Split(r.URL.Path, "/")
-
-	switch r.Method {
-	case http.MethodGet:
-		if slices.Contains(pathSegments, "create") {
-			p.GetFormPostHandler(w, r)
-		} else if slices.Contains(pathSegments, "archive") {
-			p.GetAllPostsHandler(w, r)
-		} else {
-			switch len(pathSegments) {
-			case 3: // get post by ID
-				p.GetPostByIdHandler(w, r)
-			case 2: // get active posts
-				p.GetActivePostsHandler(w, r)
-			}
-		}
-	case http.MethodPost:
-		p.CreatePostHandler(w, r)
+func NewPostHandler(service *service.PostService, imageStorage domain.ImageStorage) *PostHandler {
+	return &PostHandler{
+		service:      service,
+		imageStorage: imageStorage,
 	}
 }
 
 func (p *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse the request body to create a Post
-	var post domain.Post
-	err := json.NewDecoder(r.Body).Decode(&post)
+
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, "Cannot parse form", http.StatusBadRequest)
 		return
 	}
 
-	// Call the service to create the post
-	id, err := p.service.CreatePost(post)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	title := r.FormValue("title")
+	text := r.FormValue("text")
+
+	if title == "" || text == "" {
+		http.Error(w, "Title and text are required", http.StatusBadRequest)
 		return
 	}
 
-	// Respond with the newly created post ID
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(strconv.Itoa(id)))
+	var imageFilename string
+	file, handler, err := r.FormFile("image")
+	if err == nil {
+		defer file.Close()
+		imageFilename = fmt.Sprintf("%d_%s", time.Now().UnixNano(), handler.Filename)
+
+		err = p.imageStorage.UploadImage(file, imageFilename)
+		if err != nil {
+			http.Error(w, "Failed to upload image: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	post := domain.Post{
+		Title:   title,
+		Content: text,
+	}
+	if imageFilename != "" {
+		post.IMGsURLs = []string{imageFilename}
+	}
+
+	_, err = p.service.CreatePost(post)
+	if err != nil {
+		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (p *PostHandler) GetActivePostsHandler(w http.ResponseWriter, r *http.Request) {
@@ -102,12 +111,19 @@ func (p *PostHandler) GetAllPostsHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Respond with the list of posts in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(posts)
 }
 
 func (p *PostHandler) GetFormPostHandler(w http.ResponseWriter, r *http.Request) {
-	return //vyzov template for form
+	tmpl, err := template.ParseFiles("templates/create-post.html")
+	if err != nil {
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, "Failed to render template: "+err.Error(), http.StatusInternalServerError)
+	}
 }

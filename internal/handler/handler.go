@@ -45,7 +45,7 @@ func ShowCatalog(postService *service.PostService) http.HandlerFunc {
 				ID:            post.ID,
 				Title:         post.Title,
 				IMGURL:        imgURL,
-				CommentCount:  0, // placeholder
+				CommentCount:  0,
 				TimeRemaining: timeRemaining,
 			})
 		}
