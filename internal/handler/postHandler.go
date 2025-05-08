@@ -102,6 +102,11 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
 	}
+	comments, err := p.CommentHandler.service.GetCommentsByPostID(id)
+	if err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
 
 	imageFilename := ""
 	if len(post.IMGsURLs) > 0 {
