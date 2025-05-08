@@ -21,10 +21,11 @@ CREATE TABLE comments (
                           author TEXT NOT NULL
 );
 
+
 CREATE TABLE sessions (
-                          id SERIAL PRIMARY KEY,
-                          name TEXT NOT NULL,
-                          avatar_url TEXT,
-                          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                          expires_at TIMESTAMP NOT NULL
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    avatar_url TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP NOT NULL
 );

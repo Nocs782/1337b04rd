@@ -24,7 +24,7 @@ func NewPostHandler(service *service.PostService, imageStorage domain.ImageStora
 	}
 }
 
-func (p *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
+func (p *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request, session *domain.Session) {
 
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -54,9 +54,12 @@ func (p *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	post := domain.Post{
-		Title:   title,
-		Content: text,
+		Title:     title,
+		Content:   text,
+		Author:    session.ID,
+		AvatarURL: session.AvatarURL,
 	}
+
 	if imageFilename != "" {
 		post.IMGsURLs = []string{imageFilename}
 	}
@@ -78,12 +81,11 @@ func (p *PostHandler) GetActivePostsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Respond with the list of posts in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(posts)
 }
 
-func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request) {
+func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request, session *domain.Session) {
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if len(pathSegments) < 3 {
@@ -102,11 +104,6 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
 	}
-	comments, err := p.CommentHandler.service.GetCommentsByPostID(id)
-	if err != nil {
-		http.Error(w, "Post not found", http.StatusNotFound)
-		return
-	}
 
 	imageFilename := ""
 	if len(post.IMGsURLs) > 0 {
@@ -120,13 +117,15 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request)
 			Text          string
 			ImageFilename string
 		}
-		Comments []struct { // empty for now
+		Comments []struct {
 			ID        int
 			AvatarURL string
 			Username  string
 			Text      string
 			ReplyToID *int
 		}
+		SessionAvatar string
+		SessionID     string
 	}{
 		Post: struct {
 			ID            int
@@ -146,6 +145,8 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request)
 			Text      string
 			ReplyToID *int
 		}{},
+		SessionAvatar: session.AvatarURL,
+		SessionID:     session.ID,
 	}
 
 	tmpl, err := template.ParseFiles("templates/post.html")

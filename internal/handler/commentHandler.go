@@ -18,15 +18,16 @@ func NewCommentHandler(service *service.CommentService) *CommentHandler {
 	return &CommentHandler{service: service}
 }
 
-func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, session *domain.Session) {
 	pathSegments := strings.Split(r.URL.Path, "/")
 
 	switch r.Method {
 	case http.MethodPost:
 		if len(pathSegments) == 2 {
-			c.ReplyComment(w, r)
+			c.ReplyComment(w, r, session)
+		} else {
+			c.PostComment(w, r, session)
 		}
-		c.PostComment(w, r)
 
 	case http.MethodGet:
 		if len(pathSegments) == 2 { // comments/{postId}/
@@ -37,7 +38,7 @@ func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request, session *domain.Session) {
 	var comment domain.Comment
 
 	r.ParseForm()
@@ -50,6 +51,8 @@ func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request) {
 		PostID:    id,
 		Content:   text,
 		CreatedAt: time.Now(),
+		Author:    session.ID,
+		AvatarURL: session.AvatarURL,
 	}
 
 	if replyTo != "" {
@@ -68,7 +71,6 @@ func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CommentHandler) GetCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract the post ID from the URL
 	pathSegments := strings.Split(r.URL.Path, "/")
 	postID, err := strconv.Atoi(pathSegments[1])
 	if err != nil {
@@ -82,12 +84,11 @@ func (c *CommentHandler) GetCommentsByPostIDHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Respond with the comments in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(comments)
 }
 
-func (c *CommentHandler) ReplyComment(w http.ResponseWriter, r *http.Request) {
+func (c *CommentHandler) ReplyComment(w http.ResponseWriter, r *http.Request, session *domain.Session) {
 	var comment domain.Comment
 	pathSegments := strings.Split(r.URL.Path, "/")
 	parentID, err := strconv.Atoi(pathSegments[1])
@@ -101,7 +102,10 @@ func (c *CommentHandler) ReplyComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call the service to create the comment
+	comment.Author = session.Name
+	comment.AvatarURL = session.AvatarURL
+	comment.CreatedAt = time.Now()
+
 	err = c.service.ReplyComment(comment, parentID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

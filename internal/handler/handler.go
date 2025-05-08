@@ -21,12 +21,14 @@ type CatalogPost struct {
 }
 
 type CatalogPageData struct {
-	Posts []CatalogPost
+	Posts   []CatalogPost
+	Session *domain.Session
 }
 
-func ShowCatalog(postService *service.PostService) http.HandlerFunc {
+func ShowCatalog(postService *service.PostService, session *domain.Session) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Get posts from service
+
 		posts, err := postService.GetActivePosts()
 		if err != nil {
 			http.Error(w, "Failed to load posts", http.StatusInternalServerError)
@@ -51,13 +53,14 @@ func ShowCatalog(postService *service.PostService) http.HandlerFunc {
 				Title:         post.Title,
 				Content:       post.Content,
 				IMGURL:        imgURL,
-				CommentCount:  0, // Placeholder for now
+				CommentCount:  0,
 				TimeRemaining: timeRemaining,
 			})
 		}
 
 		data := CatalogPageData{
-			Posts: catalogPosts,
+			Posts:   catalogPosts,
+			Session: session,
 		}
 
 		tmpl, err := template.ParseFiles("templates/catalog.html")
@@ -75,8 +78,17 @@ func ShowCatalog(postService *service.PostService) http.HandlerFunc {
 
 func EnsureSession(w http.ResponseWriter, r *http.Request, sessionRepo *postgres.SessionRepo, rmClient *rickmorty.Client) (*domain.Session, error) {
 	sessionID := GetSessionID(r)
+
 	if sessionID != "" {
-		return &domain.Session{ID: sessionID, Name: "Anonymous", AvatarURL: ""}, nil
+		existingSession, err := sessionRepo.GetSessionByID(sessionID)
+		if err == nil {
+			if existingSession.ExpiresAt.After(time.Now()) {
+
+				return existingSession, nil
+			}
+
+		}
+
 	}
 
 	newSessionID := GenerateSessionID()
@@ -100,7 +112,6 @@ func EnsureSession(w http.ResponseWriter, r *http.Request, sessionRepo *postgres
 		return nil, err
 	}
 
-	// Set the session cookie in user's browser
 	SetSessionCookie(w, newSessionID)
 
 	return &newSession, nil

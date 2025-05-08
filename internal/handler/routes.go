@@ -22,58 +22,48 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 	sessionRepo := postgres.NewSessionRepo(db)
 	rickmortyClient := rickmorty.NewClient("https://rickandmortyapi.com/api", &http.Client{})
 
-	// CATALOG: Always ensure session when user loads the main page
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
+		session, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
 		if err != nil {
 			http.Error(w, "Failed to establish session", http.StatusInternalServerError)
 			return
 		}
-		ShowCatalog(postService)(w, r)
+
+		ShowCatalog(postService, session)(w, r)
 	})
 
-	// CREATE POST
 	mux.HandleFunc("/create-post", func(w http.ResponseWriter, r *http.Request) {
-		_, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
+		session, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
 		if err != nil {
 			http.Error(w, "Failed to establish session", http.StatusInternalServerError)
 			return
 		}
-
 		if r.Method == http.MethodGet {
 			postHandler.GetFormPostHandler(w, r)
 		} else if r.Method == http.MethodPost {
-			// Later we'll also pass session info here.
-			postHandler.CreatePostHandler(w, r)
+			postHandler.CreatePostHandler(w, r, session)
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	// POST PAGE & COMMENTING
 	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
+		session, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
 		if err != nil {
 			http.Error(w, "Failed to establish session", http.StatusInternalServerError)
 			return
 		}
 
 		if r.Method == http.MethodPost {
-			commentHandler.ServeHTTP(w, r)
+			commentHandler.ServeHTTP(w, r, session)
 		} else if r.Method == http.MethodGet {
-			postHandler.GetPostByIdHandler(w, r)
+			postHandler.GetPostByIdHandler(w, r, session)
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	// ARCHIVE PAGE
-	mux.HandleFunc("/archive", func(w http.ResponseWriter, r *http.Request) {
-		_, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
-		if err != nil {
-			http.Error(w, "Failed to establish session", http.StatusInternalServerError)
-			return
-		}
-		postHandler.GetAllPostsHandler(w, r)
-	})
+	// mux.HandleFunc("/archive", func(w http.ResponseWriter, r *http.Request) {
+	// 	ShowArchive(postService, sessionRepo, rickmortyClient)(w, r)
+	// })
 }
