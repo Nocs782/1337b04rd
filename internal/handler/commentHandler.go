@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type CommentHandler struct {
@@ -28,7 +29,7 @@ func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c.postComment(w, r)
 
 	case http.MethodGet:
-		if len(pathSegments) == 1 { // comments/{postId}/
+		if len(pathSegments) == 1 {
 			c.getCommentsByPostIDHandler(w, r)
 		}
 	default:
@@ -38,21 +39,30 @@ func (c *CommentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (c *CommentHandler) postComment(w http.ResponseWriter, r *http.Request) {
 	var comment domain.Comment
-	// Decode the incoming request JSON payload into a Comment object
-	err := json.NewDecoder(r.Body).Decode(&comment)
-	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
+
+	r.ParseForm()
+	text := r.FormValue("text")
+	replyTo := r.FormValue("reply_to")
+
+	id, _ := strconv.Atoi(strings.Split(r.URL.Path, "/")[2]) // post/{id}/comment
+
+	comment = domain.Comment{
+		PostID:    id,
+		Content:   text,
+		CreatedAt: time.Now(),
 	}
 
-	// Call the service to create the comment
-	err = c.service.CreateComment(comment)
+	if replyTo != "" {
+		replyID, _ := strconv.Atoi(replyTo)
+		comment.ParentCommentID = &replyID
+	}
+
+	err := c.service.CreateComment(comment)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Respond with a success message
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Comment created successfully"))
 }
@@ -66,7 +76,6 @@ func (c *CommentHandler) getCommentsByPostIDHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Get the comments for the given post from the service
 	comments, err := c.service.GetCommentsByPostID(postID)
 	if err != nil {
 		http.Error(w, "Failed to fetch comments", http.StatusInternalServerError)
@@ -82,6 +91,10 @@ func (c *CommentHandler) replyComment(w http.ResponseWriter, r *http.Request) {
 	var comment domain.Comment
 	pathSegments := strings.Split(r.URL.Path, "/")
 	parentID, err := strconv.Atoi(pathSegments[1])
+	if err != nil {
+		http.Error(w, "Invalid parent ID", http.StatusBadRequest)
+		return
+	}
 	err = json.NewDecoder(r.Body).Decode(&comment)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)

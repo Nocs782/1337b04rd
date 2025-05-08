@@ -14,16 +14,11 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 	postService := service.NewPostService(postRepo)
 	postHandler := NewPostHandler(postService, imageStorage)
 
-	// commentRepo := postgres.NewCommentsRepo(db)
-	// commentService := service.NewCommentService(commentRepo)
-	// commentHandler := NewCommentHandler(commentService)
+	commentRepo := postgres.NewCommentsRepo(db)
+	commentService := service.NewCommentService(commentRepo)
+	commentHandler := NewCommentHandler(commentService)
 
 	mux.HandleFunc("/", ShowCatalog(postService))
-
-	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
-
-	// mux.Handle("/archive", func() {}) // loads all archive
-	// mux.HandleFunc("/archive/", func(w http.ResponseWriter, r *http.Request) {})
 
 	mux.HandleFunc("/create-post", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
@@ -35,7 +30,15 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 		}
 	})
 
-	mux.HandleFunc("/post/", postHandler.GetPostByIdHandler)
+	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			commentHandler.ServeHTTP(w, r)
+		} else if r.Method == http.MethodGet {
+			postHandler.GetPostByIdHandler(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	mux.HandleFunc("/archive", postHandler.GetAllPostsHandler)
 }

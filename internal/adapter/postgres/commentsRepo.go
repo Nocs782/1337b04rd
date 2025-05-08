@@ -3,6 +3,8 @@ package postgres
 import (
 	"1337b04rd/internal/domain"
 	"database/sql"
+
+	"github.com/lib/pq"
 )
 
 type CommentsRepo struct {
@@ -17,7 +19,7 @@ func NewCommentsRepo(db *sql.DB) *CommentsRepo {
 
 func (c *CommentsRepo) CreateComment(com domain.Comment) error {
 	query := `
-	INSERT INTO comments(post_id, parent_id, avatarurl, imgsurl, content, created_at, author)
+	INSERT INTO comments(post_id, parent_comment_id, avatar_url, imgs_urls, content, created_at, author)
 	VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	_, err := c.db.Exec(query, com.PostID, com.ParentCommentID, com.AvatarURL, com.IMGsURLs, com.Content, com.CreatedAt, com.Author)
@@ -39,7 +41,17 @@ func (c *CommentsRepo) GetCommentsByPostID(ID int) ([]domain.Comment, error) {
 	var comments []domain.Comment
 	for rows.Next() {
 		var comment domain.Comment
-		err := rows.Scan(comment)
+		err := rows.Scan(
+			&comment.ID,
+			&comment.PostID,
+			&comment.ParentCommentID,
+			&comment.AvatarURL,
+			pq.Array(&comment.IMGsURLs),
+			&comment.Content,
+			&comment.CreatedAt,
+			&comment.Author,
+		)
+
 		if err != nil {
 			return nil, err
 		}
