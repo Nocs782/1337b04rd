@@ -10,14 +10,29 @@ type SessionRepo struct {
 }
 
 func NewSessionRepo(db *sql.DB) *SessionRepo {
-	return &SessionRepo{}
+	return &SessionRepo{
+		db: db,
+	}
 }
 
-func (s *SessionRepo) CreateRepo(session domain.Session) error {
-	query := `INSERT INTO sessions (name, avatarurl, created_at) VALUES ($1, $2, $3)`
-	_, err := s.db.Exec(query, session.Name, session.AvatarURL, session.CreatedAt)
+func (s *SessionRepo) CreateSession(session domain.Session) error {
+	query := `INSERT INTO sessions (id, name, avatar_url, created_at, expires_at) VALUES ($1, $2, $3, $4, $5)`
+	_, err := s.db.Exec(query, session.ID, session.Name, session.AvatarURL, session.CreatedAt, session.ExpiresAt)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *SessionRepo) GetSessionByID(id string) (*domain.Session, error) {
+	query := `SELECT id, name, avatar_url, created_at, expires_at FROM sessions WHERE id = $1`
+	row := s.db.QueryRow(query, id)
+
+	var session domain.Session
+	err := row.Scan(&session.ID, &session.Name, &session.AvatarURL, &session.CreatedAt, &session.ExpiresAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
 }

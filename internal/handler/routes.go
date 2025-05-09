@@ -1,31 +1,78 @@
 package handler
 
 import (
+	"1337b04rd/internal/adapter/postgres"
+	rickmorty "1337b04rd/internal/adapter/rickandmorty"
+	"1337b04rd/internal/domain"
+	"1337b04rd/internal/service"
 	"database/sql"
 	"net/http"
 )
 
-func RegisterRoutes(mux *http.ServeMux, db *sql.DB) {
-	var chandler CommentHandler
+func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageStorage) {
 
-	mux.Handle("/", &chandler) // loads all posts
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
+	commentRepo := postgres.NewCommentsRepo(db)
+	postRepo := postgres.NewPostRepo(db)
+	commentService := service.NewCommentService(commentRepo, postRepo)
+	commentHandler := NewCommentHandler(commentService)
+	postService := service.NewPostService(postRepo)
+	postHandler := NewPostHandler(postService, commentService, imageStorage)
 
-	mux.Handle("/archive", func() {}) // loads all archive
-	mux.HandleFunc("/archive/", func(w http.ResponseWriter, r *http.Request) {})
+	sessionRepo := postgres.NewSessionRepo(db)
+	rickmortyClient := rickmorty.NewClient("https://rickandmortyapi.com/api", &http.Client{})
 
-	mux.Handle("/create", func() {}) // creating post
-	mux.HandleFunc("/create/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			// make a post
-		case http.MethodGet:
-			// get form to make a post
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		session, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
+		if err != nil {
+			http.Error(w, "Failed to establish session", http.StatusInternalServerError)
+			return
+		}
+
+		ShowCatalog(postService, session)(w, r)
+	})
+
+	mux.HandleFunc("/create-post", func(w http.ResponseWriter, r *http.Request) {
+		session, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
+		if err != nil {
+			http.Error(w, "Failed to establish session", http.StatusInternalServerError)
+			return
+		}
+		if r.Method == http.MethodGet {
+			postHandler.GetFormPostHandler(w, r)
+		} else if r.Method == http.MethodPost {
+			postHandler.CreatePostHandler(w, r, session)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	mux.Handle("/post", func() {})
-	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {})
 
-	mux.Handle("/comment", func() {})
-	mux.HandleFunc("/comment/", func(w http.ResponseWriter, r *http.Request) {})
+	mux.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {
+		session, err := EnsureSession(w, r, sessionRepo, rickmortyClient)
+		if err != nil {
+			http.Error(w, "Failed to establish session", http.StatusInternalServerError)
+			return
+		}
+
+		if r.Method == http.MethodPost {
+			commentHandler.ServeHTTP(w, r, session)
+		} else if r.Method == http.MethodGet {
+			postHandler.GetPostByIdHandler(w, r, session)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/archive", func(w http.ResponseWriter, r *http.Request) {
+		ShowArchive(postService)(w, r)
+	})
+
+	mux.HandleFunc("/archive-post/", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == http.MethodGet {
+			postHandler.GetArchivedPostByIdHandler(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 }

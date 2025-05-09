@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Archived Post {{.Post.ID}}</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background-color: #f9fafb;
+        margin: 0;
+        padding: 2rem;
+        color: #1f2937;
+      }
+
+      header {
+        background-color: #e5e7eb;
+        padding: 1rem 2rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .post-box,
+      .comment-box {
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .post-image {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        border-radius: 0.375rem;
+        margin-top: 1rem;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 9999px;
+        object-fit: cover;
+        margin-right: 0.75rem;
+      }
+
+      .comment-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .comment-meta {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-left: auto;
+      }
+
+      .comment-body {
+        padding-left: 2.75rem;
+        font-size: 0.95rem;
+      }
+
+      .reply-indicator {
+        color: #3b82f6;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
+
+      .notice {
+        text-align: center;
+        color: #dc2626;
+        font-weight: 500;
+        margin-top: 1.5rem;
+      }
+
+      .nav-button {
+        display: inline-block;
+        margin-top: 2rem;
+        text-align: center;
+      }
+
+      .nav-button button {
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .nav-button button:hover {
+        background-color: #2563eb;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Archived Thread: {{.Post.Title}}</h1>
+    </header>
+
+    <div class="post-box">
+      <h2>{{.Post.Title}}</h2>
+      <p>{{.Post.Content}}</p>
+      <p><strong>Post ID:</strong> {{.Post.ID}}</p>
+
+      {{if .Post.ImageFilename}}
+      <img
+        src="http://localhost:9000/post-images/{{.Post.ImageFilename}}"
+        class="post-image"
+        alt="Post Image"
+      />
+      {{else}}
+      <img
+        src="http://localhost:9000/static/NI.jpg"
+        class="post-image"
+        alt="No Image Available"
+      />
+      {{end}}
+    </div>
+
+    <h3>Comments</h3>
+
+    {{range .Comments}}
+    <div class="comment-box">
+      <div class="comment-header">
+        <img src="{{.AvatarURL}}" class="avatar" alt="Avatar" />
+        <strong>{{.Username}}</strong>
+        <span class="comment-meta">ID: {{.ID}}</span>
+      </div>
+      <div class="comment-body">
+        <p>{{.Text}}</p>
+        {{if .ReplyToID}}
+        <div class="reply-indicator">Replying to ID: {{.ReplyToID}}</div>
+        {{end}}
+      </div>
+    </div>
+    {{end}}
+
+    <div class="notice">
+      This thread is archived. You cannot add new comments.
+    </div>
+
+    <div class="nav-button">
+      <button onclick="window.location.href='/archive'">Back to Archive</button>
+    </div>
+  </body>
+</html>
