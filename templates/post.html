@@ -1,120 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Post {{ .Post.ID }}</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 20px;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .post-container, .comment {
-            background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-        }
-        img.post-image {
-            max-width: 100%;
-            height: auto;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
-        .avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-        .comment-header {
-            display: flex;
-            align-items: center;
-        }
-        .comment-body {
-            margin-left: 60px;
-        }
-        .reply-link {
-            font-size: 12px;
-            color: blue;
-            cursor: pointer;
-        }
-        form {
-            margin-top: 30px;
-        }
-        textarea {
-            width: 100%;
-            height: 80px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 14px;
-        }
+      body {
+        font-family: system-ui, sans-serif;
+        background-color: #f9fafb;
+        margin: 0;
+        padding: 2rem;
+        color: #1f2937;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .thread-box,
+      .comment-box,
+      .form-box {
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .post-image {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        margin-top: 1rem;
+        border-radius: 0.375rem;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 9999px;
+        object-fit: cover;
+        margin-right: 0.75rem;
+      }
+
+      .comment-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .comment-body {
+        padding-left: 2.75rem;
+        font-size: 0.95rem;
+      }
+
+      .reply-indicator {
+        color: #3b82f6;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
+
+      .reply-link {
+        font-size: 0.8rem;
+        color: #2563eb;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        display: inline-block;
+      }
+
+      .form-box h3 {
+        margin-bottom: 1rem;
+      }
+
+      .form-box textarea {
+        width: 100%;
+        height: 100px;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        resize: vertical;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .form-box button {
+        background-color: #16a34a;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .form-box button:hover {
+        background-color: #15803d;
+      }
+
+      .nav-button {
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      .nav-button button {
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+
+      .nav-button button:hover {
+        background-color: #2563eb;
+      }
     </style>
     <script>
-        function setReplyTo(id) {
-            document.getElementById('reply_to').value = id;
-            window.location.hash = 'comment-form';
-        }
+      function setReplyTo(id) {
+        document.getElementById("reply_to").value = id;
+        window.location.hash = "comment-form";
+      }
     </script>
-</head>
-<body>
+  </head>
+  <body>
+    <header>
+      <h1>Thread: {{ .Post.Title }}</h1>
+    </header>
 
-<header>
-    <h1>Thread: {{ .Post.Title }}</h1>
-</header>
-
-<div class="post-container">
-    <h2>{{ .Post.Title }}</h2>
-    <p>{{ .Post.Text }}</p>
-    <p><strong>Post ID:</strong> {{ .Post.ID }}</p>
-    {{if .Post.ImageFilename}}
-        <img src="http://localhost:9000/post-images/{{ .Post.ImageFilename }}" class="post-image" alt="Post Image">
-    {{end}}
-</div>
-
-<h3>Comments</h3>
-
-{{range .Comments}}
-    <div class="comment">
-        <div class="comment-header">
-            <img src="{{ .AvatarURL }}" class="avatar" alt="Avatar">
-            <strong>{{ .Username }}</strong> 
-            (ID: {{ .ID }}) 
-            {{if .ReplyToID}}
-                replying to ID: {{ .ReplyToID }}
-            {{end}}
-        </div>
-        <div class="comment-body">
-            <p>{{ .Text }}</p>
-            <span class="reply-link" onclick="setReplyTo('{{ .ID }}')">Reply</span>
-        </div>
+    <div class="thread-box">
+      <h2>{{ .Post.Title }}</h2>
+      <p>{{ .Post.Text }}</p>
+      <p><strong>Post ID:</strong> {{ .Post.ID }}</p>
+      {{if .Post.ImageFilename}}
+      <img
+        src="http://localhost:9000/post-images/{{ .Post.ImageFilename }}"
+        class="post-image"
+        alt="Post Image"
+      />
+      {{end}}
     </div>
-{{end}}
 
-<div class="post-container" id="comment-form">
-    <h3>Add a Comment</h3>
-    <form method="POST" action="/post/{{ .Post.ID }}/comment">
+    <h3>Comments</h3>
+
+    {{range .Comments}}
+    <div class="comment-box">
+      <div class="comment-header">
+        <img src="{{ .AvatarURL }}" class="avatar" alt="Avatar" />
+        <strong>{{ .Username }}</strong>
+        <span style="margin-left: auto; font-size: 0.85rem; color: #6b7280"
+          >ID: {{ .ID }}</span
+        >
+      </div>
+      <div class="comment-body">
+        <p>{{ .Text }}</p>
+        {{if .ReplyToID}}
+        <div class="reply-indicator">Replying to ID: {{ .ReplyToID }}</div>
+        {{end}}
+        <span class="reply-link" onclick="setReplyTo('{{ .ID }}')">Reply</span>
+      </div>
+    </div>
+    {{end}}
+
+    <div class="form-box" id="comment-form">
+      <h3>Add a Comment</h3>
+      <form method="POST" action="/post/{{ .Post.ID }}/comment">
         <textarea name="text" required></textarea>
-        <input type="hidden" name="reply_to" id="reply_to" value="">
-        <br>
+        <input type="hidden" name="reply_to" id="reply_to" value="" />
+        <br />
         <button type="submit">Submit Comment</button>
-    </form>
-</div>
+      </form>
+    </div>
+    
+    </div>
 
-<div style="text-align:center; margin-top:20px;">
-    <button onclick="window.location.href='/'">Back to Catalog</button>
-</div>
-
-</body>
+    <div class="nav-button">
+      <button onclick="window.location.href='/catalog'">Back to Catalog</button>
+    </div>
+  </body>
 </html>

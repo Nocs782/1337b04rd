@@ -1,88 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Archived Post {{ post.id }}</title>
-        <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 20px;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .post-container, .comment {
-            background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-        }
-        img.post-image {
-            max-width: 100%;
-            height: auto;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
-        .avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-        .comment-header {
-            display: flex;
-            align-items: center;
-        }
-        .comment-body {
-            margin-left: 60px;
-        }
+  <head>
+    <meta charset="UTF-8" />
+    <title>Archived Post {{ post.id }}</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background-color: #f9fafb;
+        margin: 0;
+        padding: 2rem;
+        color: #1f2937;
+      }
+
+      header {
+        background-color: #e5e7eb;
+        padding: 1rem 2rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .post-box,
+      .comment-box {
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .post-image {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        border-radius: 0.375rem;
+        margin-top: 1rem;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 9999px;
+        object-fit: cover;
+        margin-right: 0.75rem;
+      }
+
+      .comment-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .comment-meta {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-left: auto;
+      }
+
+      .comment-body {
+        padding-left: 2.75rem;
+        font-size: 0.95rem;
+      }
+
+      .reply-indicator {
+        color: #3b82f6;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
+
+      .notice {
+        text-align: center;
+        color: #dc2626;
+        font-weight: 500;
+        margin-top: 1.5rem;
+      }
+
+      .nav-button {
+        display: inline-block;
+        margin-top: 2rem;
+        text-align: center;
+      }
+
+      .nav-button button {
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .nav-button button:hover {
+        background-color: #2563eb;
+      }
     </style>
-    </head>
-    <body>
+  </head>
+  <body>
+    <header>
+      <h1>Archived Thread: {{ post.title }}</h1>
+    </header>
 
-        <header>
-            <h1>Archived Thread: {{ post.title }}</h1>
-        </header>
+    <div class="post-box">
+      <h2>{{ post.title }}</h2>
+      <p>{{ post.text }}</p>
+      <p><strong>Post ID:</strong> {{ post.id }}</p>
+      {% if post.image_filename %}
+      <img
+        src="http://localhost:9000/post-images/{{ post.image_filename }}"
+        class="post-image"
+        alt="Post Image"
+      />
+      {% endif %}
+    </div>
 
-        <div class="post-container">
-            <h2>{{ post.title }}</h2>
-            <p>{{ post.text }}</p>
-            <p><strong>Post ID:</strong> {{ post.id }}</p>
-            {% if post.image_filename %}
-            <img
-                src="http://localhost:9000/post-images/{{ post.image_filename }}"
-                class="post-image" alt="Post Image">
-            {% endif %}
+    <h3>Comments</h3>
+
+    {% for comment in comments %}
+    <div class="comment-box">
+      <div class="comment-header">
+        <img src="{{ comment.avatar_url }}" class="avatar" alt="Avatar" />
+        <strong>{{ comment.username }}</strong>
+        <span class="comment-meta">ID: {{ comment.id }}</span>
+      </div>
+      <div class="comment-body">
+        <p>{{ comment.text }}</p>
+        {% if comment.reply_to_id %}
+        <div class="reply-indicator">
+          Replying to ID: {{ comment.reply_to_id }}
         </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
 
-        <h3>Comments</h3>
+    <div class="notice">
+      This thread is archived. You cannot add new comments.
+    </div>
 
-        {% for comment in comments %}
-        <div class="comment">
-            <div class="comment-header">
-                <img src="{{ comment.avatar_url }}" class="avatar" alt="Avatar">
-                <strong>{{ comment.username }}</strong>
-                (ID: {{ comment.id }})
-                {% if comment.reply_to_id %}
-                replying to ID: {{ comment.reply_to_id }}
-                {% endif %}
-            </div>
-            <div class="comment-body">
-                <p>{{ comment.text }}</p>
-            </div>
-        </div>
-        {% endfor %}
-
-        <div style="text-align:center; margin-top:20px;">
-            <button onclick="window.location.href='/catalog'">Back to
-                Catalog</button>
-        </div>
-
-    </body>
+    <div class="nav-button">
+      <button onclick="window.location.href='/catalog'">Back to Catalog</button>
+    </div>
+  </body>
 </html>
