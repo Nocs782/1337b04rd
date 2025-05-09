@@ -12,10 +12,9 @@ import (
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageStorage) {
 
 	commentRepo := postgres.NewCommentsRepo(db)
-	commentService := service.NewCommentService(commentRepo)
-	commentHandler := NewCommentHandler(commentService)
-
 	postRepo := postgres.NewPostRepo(db)
+	commentService := service.NewCommentService(commentRepo, postRepo)
+	commentHandler := NewCommentHandler(commentService)
 	postService := service.NewPostService(postRepo)
 	postHandler := NewPostHandler(postService, commentService, imageStorage)
 

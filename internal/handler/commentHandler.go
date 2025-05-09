@@ -44,6 +44,7 @@ func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request, ses
 
 	r.ParseForm()
 	text := r.FormValue("text")
+	fmt.Println(text)
 	replyTo := r.FormValue("reply_to")
 
 	id, _ := strconv.Atoi(strings.Split(r.URL.Path, "/")[2]) // post/{id}/comment

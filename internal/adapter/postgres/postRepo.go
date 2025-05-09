@@ -4,6 +4,7 @@ import (
 	"1337b04rd/internal/domain"
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/lib/pq"
 )
@@ -91,5 +92,10 @@ func (p *PostRepo) GetArchivePosts() ([]domain.Post, error) {
 func (p *PostRepo) ExpireOldPosts() error {
 	query := `UPDATE posts SET deleted = TRUE WHERE deleted = FALSE AND last_commented < NOW() - INTERVAL '15 minutes'`
 	_, err := p.db.Exec(query)
+	return err
+}
+
+func (p *PostRepo) UpdatePostLastCommented(postID int, t time.Time) error {
+	_, err := p.db.Exec("UPDATE posts SET last_commented = $1 WHERE id = $2", t, postID)
 	return err
 }
