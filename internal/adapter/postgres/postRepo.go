@@ -69,9 +69,9 @@ func (p *PostRepo) GetActivePosts() ([]domain.Post, error) {
 	return posts, nil
 }
 
-func (p *PostRepo) GetAllPosts() ([]domain.Post, error) {
+func (p *PostRepo) GetArchivePosts() ([]domain.Post, error) {
 	var posts []domain.Post
-	query := `SELECT * FROM posts;`
+	query := `SELECT * FROM posts WHERE deleted IS TRUE`
 	rows, err := p.db.Query(query)
 	if err != nil {
 		return posts, err
@@ -88,11 +88,8 @@ func (p *PostRepo) GetAllPosts() ([]domain.Post, error) {
 	return posts, nil
 }
 
-func (p *PostRepo) ExpirePost(id int) error {
-	query := `UPDATE posts SET deleted = TRUE WHERE id = $1`
-	_, err := p.db.Exec(query, id)
-	if err != nil {
-		return err
-	}
-	return nil
+func (p *PostRepo) ExpireOldPosts() error {
+	query := `UPDATE posts SET deleted = TRUE WHERE deleted = FALSE AND last_commented < NOW() - INTERVAL '15 minutes'`
+	_, err := p.db.Exec(query)
+	return err
 }

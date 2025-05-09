@@ -4,6 +4,7 @@ import (
 	"1337b04rd/internal/domain"
 	"1337b04rd/internal/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -51,7 +52,8 @@ func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request, ses
 		PostID:    id,
 		Content:   text,
 		CreatedAt: time.Now(),
-		Author:    session.ID,
+		Author:    session.Name,
+		AuthorID:  session.ID,
 		AvatarURL: session.AvatarURL,
 	}
 
@@ -66,8 +68,7 @@ func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request, ses
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Comment created successfully"))
+	http.Redirect(w, r, fmt.Sprintf("/post/%d", comment.PostID), http.StatusSeeOther)
 }
 
 func (c *CommentHandler) GetCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +104,7 @@ func (c *CommentHandler) ReplyComment(w http.ResponseWriter, r *http.Request, se
 	}
 
 	comment.Author = session.Name
+	comment.AuthorID = session.ID
 	comment.AvatarURL = session.AvatarURL
 	comment.CreatedAt = time.Now()
 
@@ -111,6 +113,6 @@ func (c *CommentHandler) ReplyComment(w http.ResponseWriter, r *http.Request, se
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Comment created successfully"))
+
+	http.Redirect(w, r, fmt.Sprintf("/post/%d", comment.PostID), http.StatusSeeOther)
 }

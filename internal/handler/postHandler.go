@@ -13,14 +13,16 @@ import (
 )
 
 type PostHandler struct {
-	service      *service.PostService
-	imageStorage domain.ImageStorage
+	postService    *service.PostService
+	commentService *service.CommentService
+	imageStorage   domain.ImageStorage
 }
 
-func NewPostHandler(service *service.PostService, imageStorage domain.ImageStorage) *PostHandler {
+func NewPostHandler(postService *service.PostService, commentService *service.CommentService, imageStorage domain.ImageStorage) *PostHandler {
 	return &PostHandler{
-		service:      service,
-		imageStorage: imageStorage,
+		postService:    postService,
+		commentService: commentService,
+		imageStorage:   imageStorage,
 	}
 }
 
@@ -64,7 +66,7 @@ func (p *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request, 
 		post.IMGsURLs = []string{imageFilename}
 	}
 
-	_, err = p.service.CreatePost(post)
+	_, err = p.postService.CreatePost(post)
 	if err != nil {
 		http.Error(w, "Failed to create post", http.StatusInternalServerError)
 		return
@@ -75,7 +77,7 @@ func (p *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request, 
 
 func (p *PostHandler) GetActivePostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Call the service to get active posts
-	posts, err := p.service.GetActivePosts()
+	posts, err := p.postService.GetActivePosts()
 	if err != nil {
 		http.Error(w, "Failed to fetch active posts", http.StatusInternalServerError)
 		return
@@ -86,7 +88,6 @@ func (p *PostHandler) GetActivePostsHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request, session *domain.Session) {
-
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if len(pathSegments) < 3 {
 		http.Error(w, "Invalid post URL", http.StatusBadRequest)
@@ -99,9 +100,15 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	post, err := p.service.GetPostByID(id)
+	post, err := p.postService.GetPostByID(id)
 	if err != nil {
 		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	comments, err := p.commentService.GetCommentsByPostID(post.ID)
+	if err != nil {
+		http.Error(w, "Failed to load comments", http.StatusInternalServerError)
 		return
 	}
 
@@ -149,6 +156,23 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request,
 		SessionID:     session.ID,
 	}
 
+	// Map domain.Comment to template-friendly format
+	for _, c := range comments {
+		data.Comments = append(data.Comments, struct {
+			ID        int
+			AvatarURL string
+			Username  string
+			Text      string
+			ReplyToID *int
+		}{
+			ID:        c.ID,
+			AvatarURL: c.AvatarURL,
+			Username:  c.Author,
+			Text:      c.Content,
+			ReplyToID: c.ParentCommentID,
+		})
+	}
+
 	tmpl, err := template.ParseFiles("templates/post.html")
 	if err != nil {
 		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
@@ -160,17 +184,6 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request,
 		http.Error(w, "Failed to render post page: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-func (p *PostHandler) GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
-	posts, err := p.service.GetAllPosts()
-	if err != nil {
-		http.Error(w, "Failed to fetch active posts", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
 }
 
 func (p *PostHandler) GetFormPostHandler(w http.ResponseWriter, r *http.Request) {

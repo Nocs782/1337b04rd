@@ -11,13 +11,13 @@ import (
 
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageStorage) {
 
-	postRepo := postgres.NewPostRepo(db)
-	postService := service.NewPostService(postRepo)
-	postHandler := NewPostHandler(postService, imageStorage)
-
 	commentRepo := postgres.NewCommentsRepo(db)
 	commentService := service.NewCommentService(commentRepo)
 	commentHandler := NewCommentHandler(commentService)
+
+	postRepo := postgres.NewPostRepo(db)
+	postService := service.NewPostService(postRepo)
+	postHandler := NewPostHandler(postService, commentService, imageStorage)
 
 	sessionRepo := postgres.NewSessionRepo(db)
 	rickmortyClient := rickmorty.NewClient("https://rickandmortyapi.com/api", &http.Client{})
@@ -63,7 +63,7 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 		}
 	})
 
-	// mux.HandleFunc("/archive", func(w http.ResponseWriter, r *http.Request) {
-	// 	ShowArchive(postService, sessionRepo, rickmortyClient)(w, r)
-	// })
+	mux.HandleFunc("/archive", func(w http.ResponseWriter, r *http.Request) {
+		ShowArchive(postService)(w, r)
+	})
 }

@@ -22,7 +22,8 @@ func (c *CommentsRepo) CreateComment(com domain.Comment) error {
 	INSERT INTO comments(post_id, parent_comment_id, avatar_url, imgs_urls, content, created_at, author)
 	VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	_, err := c.db.Exec(query, com.PostID, com.ParentCommentID, com.AvatarURL, com.IMGsURLs, com.Content, com.CreatedAt, com.Author)
+	_, err := c.db.Exec(query, com.PostID, com.ParentCommentID, com.AvatarURL, pq.Array(com.IMGsURLs), com.Content, com.CreatedAt, com.Author)
+
 	if err != nil {
 		return err
 	}

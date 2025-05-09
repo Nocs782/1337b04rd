@@ -116,3 +116,44 @@ func EnsureSession(w http.ResponseWriter, r *http.Request, sessionRepo *postgres
 
 	return &newSession, nil
 }
+
+func ShowArchive(postService *service.PostService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		posts, err := postService.GetArchivePosts()
+		if err != nil {
+			http.Error(w, "Failed to load archive", http.StatusInternalServerError)
+			return
+		}
+
+		var catalogPosts []CatalogPost
+		for _, post := range posts {
+			img := ""
+			if len(post.IMGsURLs) > 0 {
+				img = post.IMGsURLs[0]
+			}
+			catalogPosts = append(catalogPosts, CatalogPost{
+				ID:            post.ID,
+				Title:         post.Title,
+				Content:       post.Content,
+				IMGURL:        img,
+				CommentCount:  0,
+				TimeRemaining: 0,
+			})
+		}
+
+		data := CatalogPageData{
+			Posts: catalogPosts,
+		}
+
+		tmpl, err := template.ParseFiles("templates/archive.html")
+		if err != nil {
+			http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = tmpl.Execute(w, data)
+		if err != nil {
+			http.Error(w, "Failed to render archive", http.StatusInternalServerError)
+		}
+	}
+}
