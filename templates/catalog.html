@@ -61,7 +61,6 @@
       }
 
       .post-img {
-        width: 200px;
         height: 150px;
         object-fit: cover;
         flex-shrink: 0;
@@ -122,11 +121,7 @@
           class="post-img"
         />
         {{else}}
-        <img
-          src="https://via.placeholder.com/250x150?text=No+Image"
-          alt="No Image"
-          class="post-img"
-        />
+        <img src="staic/NI.jpg" alt="No Image" class="post-img" />
         {{end}}
         <div class="post-body">
           <h3 class="post-title">{{.Title}}</h3>

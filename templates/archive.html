@@ -63,7 +63,6 @@
       }
 
       .post-img {
-        width: 160px;
         height: 120px;
         object-fit: cover;
         border-radius: 0.375rem;
@@ -119,11 +118,7 @@
           class="post-img"
         />
         {{else}}
-        <img
-          src="https://via.placeholder.com/160x120?text=No+Image"
-          alt="No Image"
-          class="post-img"
-        />
+        <img src="staic/NI.jpg" alt="No Image" class="post-img" />
         {{end}}
         <div class="post-content">
           <h3 class="post-title {{if .Deleted}}post-deleted{{end}}">

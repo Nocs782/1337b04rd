@@ -140,7 +140,9 @@
         class="post-image"
         alt="Post Image"
       />
-      {{end}}
+      {% else %}
+      <img src="/static/NI.jpg" class="post-image" alt="No Image Available" />
+      {% endif %}
     </div>
 
     <h3>Comments</h3>
