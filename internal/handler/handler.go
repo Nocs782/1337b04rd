@@ -141,19 +141,15 @@ func ShowArchive(postService *service.PostService) http.HandlerFunc {
 			})
 		}
 
-		data := CatalogPageData{
-			Posts: catalogPosts,
-		}
-
 		tmpl, err := template.ParseFiles("templates/archive.html")
 		if err != nil {
 			http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		err = tmpl.Execute(w, data)
-		if err != nil {
-			http.Error(w, "Failed to render archive", http.StatusInternalServerError)
+		if err := tmpl.Execute(w, CatalogPageData{Posts: catalogPosts}); err != nil {
+			http.Error(w, "Failed to render archive: "+err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }

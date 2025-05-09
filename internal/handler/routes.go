@@ -65,4 +65,14 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB, imageStorage domain.ImageSto
 	mux.HandleFunc("/archive", func(w http.ResponseWriter, r *http.Request) {
 		ShowArchive(postService)(w, r)
 	})
+
+	mux.HandleFunc("/archive-post/", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == http.MethodGet {
+			postHandler.GetArchivedPostByIdHandler(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 }

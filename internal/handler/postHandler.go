@@ -156,7 +156,6 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request,
 		SessionID:     session.ID,
 	}
 
-	// Map domain.Comment to template-friendly format
 	for _, c := range comments {
 		data.Comments = append(data.Comments, struct {
 			ID        int
@@ -183,6 +182,101 @@ func (p *PostHandler) GetPostByIdHandler(w http.ResponseWriter, r *http.Request,
 	if err != nil {
 		http.Error(w, "Failed to render post page: "+err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func (p *PostHandler) GetArchivedPostByIdHandler(w http.ResponseWriter, r *http.Request) {
+	pathSegments := strings.Split(r.URL.Path, "/")
+	if len(pathSegments) < 3 {
+		http.Error(w, "Invalid archive post URL", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(pathSegments[2])
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	post, err := p.postService.GetPostByID(id)
+	if err != nil || !post.Deleted {
+		http.Error(w, "Archived post not found", http.StatusNotFound)
+		return
+	}
+
+	comments, err := p.commentService.GetCommentsByPostID(post.ID)
+	if err != nil {
+		http.Error(w, "Failed to load comments", http.StatusInternalServerError)
+		return
+	}
+
+	// Build image reference
+	imageFilename := ""
+	if len(post.IMGsURLs) > 0 {
+		imageFilename = post.IMGsURLs[0]
+	}
+
+	// Prepare minimal template data
+	data := struct {
+		Post struct {
+			ID            int
+			Title         string
+			Content       string
+			ImageFilename string
+		}
+		Comments []struct {
+			ID        int
+			AvatarURL string
+			Username  string
+			Text      string
+			ReplyToID *int
+		}
+	}{
+		Post: struct {
+			ID            int
+			Title         string
+			Content       string
+			ImageFilename string
+		}{
+			ID:            post.ID,
+			Title:         post.Title,
+			Content:       post.Content,
+			ImageFilename: imageFilename,
+		},
+		Comments: []struct {
+			ID        int
+			AvatarURL string
+			Username  string
+			Text      string
+			ReplyToID *int
+		}{},
+	}
+
+	for _, c := range comments {
+		data.Comments = append(data.Comments, struct {
+			ID        int
+			AvatarURL string
+			Username  string
+			Text      string
+			ReplyToID *int
+		}{
+			ID:        c.ID,
+			AvatarURL: c.AvatarURL,
+			Username:  c.Author,
+			Text:      c.Content,
+			ReplyToID: c.ParentCommentID,
+		})
+	}
+
+	tmpl, err := template.ParseFiles("templates/archive-post.html")
+	if err != nil {
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render archive post: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 

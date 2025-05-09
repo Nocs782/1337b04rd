@@ -69,7 +69,7 @@ func (c *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request, ses
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/post/%d", comment.PostID), http.StatusSeeOther)
+	http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 }
 
 func (c *CommentHandler) GetCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -115,5 +115,5 @@ func (c *CommentHandler) ReplyComment(w http.ResponseWriter, r *http.Request, se
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/post/%d", comment.PostID), http.StatusSeeOther)
+	http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 }
